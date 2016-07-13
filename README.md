@@ -29,6 +29,7 @@ use Mix.Config
 
 config :relisa,
   # Targets are specified with an {address, ssh_key_path} tuple
+  # set ssh_key_path to nil to use a running SSH agent
   targets: [
     {"ubuntu@54.68.138.247", "/vagrant/deploy.pem"}
   ],

@@ -48,27 +48,27 @@ defmodule Mix.Tasks.Relisa.Deploy do
 
   defp deploy_release(host, key) do
     Relisa.subsay "#{host}: Ensuring deploy path exists"
-    Mix.Shell.IO.cmd "ssh #{host} -i#{key} -oStrictHostKeyChecking=no \"mkdir -p #{deploy_path}\""
+    Mix.Shell.IO.cmd "ssh #{host} #{key_parameter(key)} -oStrictHostKeyChecking=no \"mkdir -p #{deploy_path}\""
     Relisa.subsay "#{host}: Moving release to deploy path"
-    Mix.Shell.IO.cmd "scp -i#{key} #{release_path} #{host}:#{deploy_path}"
+    Mix.Shell.IO.cmd "scp #{key_parameter(key)} #{release_path} #{host}:#{deploy_path}"
     Relisa.subsay "#{host}: Decompressing release archive"
-    Mix.Shell.IO.cmd "ssh #{host} -i#{key} \"tar -xf #{deploy_path}/#{archive_name} -C #{deploy_path}\""
+    Mix.Shell.IO.cmd "ssh #{host} #{key_parameter(key)} \"tar -xf #{deploy_path}/#{archive_name} -C #{deploy_path}\""
     Relisa.subsay "#{host}: Starting app"
-    Mix.Shell.IO.cmd "ssh #{host} -i#{key} \"sudo #{deploy_path}/bin/#{config[:app]} start\""
+    Mix.Shell.IO.cmd "ssh #{host} #{key_parameter(key)} \"sudo #{deploy_path}/bin/#{config[:app]} start\""
   end
 
   defp needs_upgrade?(host, key) do
-    result = Mix.Shell.IO.cmd "ssh #{host} -i#{key} -oStrictHostKeyChecking=no \"[ -d #{deploy_path}/releases ]\""
+    result = Mix.Shell.IO.cmd "ssh #{host} #{key_parameter(key)} -oStrictHostKeyChecking=no \"[ -d #{deploy_path}/releases ]\""
     result == 0
   end
 
   defp perform_upgrade(host, key) do
     Relisa.subsay "#{host}: Creating release directory for #{config[:version]}"
-    Mix.Shell.IO.cmd "ssh #{host} -i#{key} \"mkdir -p #{deploy_path}/releases/#{config[:version]}\""
+    Mix.Shell.IO.cmd "ssh #{host} #{key_parameter(key)} \"mkdir -p #{deploy_path}/releases/#{config[:version]}\""
     Relisa.subsay "#{host}: Moving archive to release path"
-    Mix.Shell.IO.cmd "scp -i#{key} #{release_path} #{host}:#{deploy_path}/releases/#{config[:version]}"
+    Mix.Shell.IO.cmd "scp #{key_parameter(key)} #{release_path} #{host}:#{deploy_path}/releases/#{config[:version]}"
     Relisa.subsay "#{host}: Upgrading `#{config[:app]}` to #{config[:version]}"
-    Mix.Shell.IO.cmd "ssh #{host} -i#{key} \"sudo #{deploy_path}/bin/#{config[:app]} upgrade '#{config[:version]}'\""
+    Mix.Shell.IO.cmd "ssh #{host} #{key_parameter(key)} \"sudo #{deploy_path}/bin/#{config[:app]} upgrade '#{config[:version]}'\""
   end
 
   defp config do
@@ -89,5 +89,13 @@ defmodule Mix.Tasks.Relisa.Deploy do
 
   defp deploy_path do
     "~/#{config[:app]}"
+  end
+
+  defp key_parameter(_key=nil) do
+    ""
+  end
+
+  defp key_parameter(key) do
+    "-i#{key}"
   end
 end
